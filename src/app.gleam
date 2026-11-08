@@ -33,7 +33,8 @@ pub const public_url = "https://lukeg294.github.io/animator/"
 pub const include_app_in_gallery = True
 
 /// A link to your video from Problem 14, which anyone with the link can watch.
-pub const video_url = ""
+pub const video_url =
+  "https://drive.google.com/file/d/1DzXwbMS3RNbPrJNaNe-wjAntr2lcOKPA/view"
 
 /// Set to True if you would like your video included in the course gallery.
 pub const include_video_in_gallery = True

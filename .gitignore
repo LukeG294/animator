@@ -11,3 +11,6 @@
 # Editor and OS files.
 /.vscode/
 .DS_Store
+
+# The demo video is uploaded to Google Drive, not kept in the repo.
+/demo-video/
