@@ -1,0 +1,65 @@
+# Builds the app and publishes it to GitHub Pages whenever main changes.
+# The site is at https://lukeg294.github.io/animator/
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Also lets you run it by hand from the repository's Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; a newer push replaces one still waiting.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Install Gleam
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          gleam-version: "1.19.2"
+
+      - name: Install Node (used to bundle the app)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Compile the app
+        run: |
+          gleam deps download
+          gleam build
+
+      # Writes index.html, animator.css and the bundled app.mjs to public/.
+      - name: Bundle the site
+        run: gleam dev publish
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

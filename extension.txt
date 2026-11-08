@@ -1,0 +1,16 @@
+Extension: "Drop", a physics game built on top of the animator.
+
+WHAT IT IS
+A "Play Game" button at the top of the page opens Drop, a game with endless levels. A ball waits in the top-left of the canvas. The player builds a path out of shapes so that, when they press "Drop ball", the ball rolls into a green bucket whose position and width change every level. If the ball falls, gets stuck or runs out of time, "Try again" replays the level; reaching the bucket unlocks "Next level". The level and the highest level reached are saved in localStorage, and "Clear data" (with an "Are you sure?" confirmation) resets everything. A short how-to-play dialog appears the first time the game is opened.
+
+HOW IT WORKS
+The player's code is the controller: it still returns a list of Paths, and the animator still draws them over time. In the game the ball only collides with the part of a line that has grown so far, so timing matters. The simulation is plain Gleam (src/game.gleam): fixed time steps, gravity, bounces and friction against line segments, computed once per code change. It produces the ball's path, which a second canvas draws by reading the animation clock, so play, pause and reset move the ball in step with the drawing. A faint trail shows where the ball went.
+
+THE SHAPES
+Instead of typing Path and Line by hand, players click, or drag, shapes from a toolbox into the code editor, or onto the level itself, where they land where they are dropped. Dragging a shape on the level moves it and rewrites its numbers in the code; dropping it on the trash can deletes its line. Small labels in the editor name each number (x, y, width, start). The fifteen shapes are helper functions built from the language's own Line and Path, so Point, Line, Path and the evaluator are unchanged: Line, Slide, Funnel, Backstop, Kicker, Chute, Bowl, Arc, Stairs and Zigzag, plus five that change how the ball moves (Bounce, Boost, Brake, Magnet and Lift). Each shape may be used only once, so the player must choose and combine shapes.
+
+THE LEVELS
+Levels are generated from their number, so they are repeatable, and each layout is checked in the simulator against a built-in solution, so every level can be won. Difficulty builds slowly: the first levels have no obstacles, then one wide gap, and by about level 20 several narrow ones. Muted red walls form tall barriers with a gap where the solution passes, and from level 7 the path bends and a shelf sits under the ball, so a single long line can't win. A line stops where it meets a wall.
+
+OTHER CHANGES
+The drawing library, the free-draw mode and its controls are unchanged. The code column can be resized by dragging its edge. Small supporting edits were made to the provided editor and canvas modules (a read-only getter for the animation clock, a fix so the latest editor mount always wins, and a visible selection colour).

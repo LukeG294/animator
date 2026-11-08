@@ -1,0 +1,13 @@
+# Compiled output and the files `gleam dev publish` writes. The workflow rebuilds both.
+/build/
+/public/
+
+# The course's own bookkeeping, and the bundles it zips up for Gradescope.
+/.provenance/
+/.provenance-manifest
+/.server_logs/
+*.zip
+
+# Editor and OS files.
+/.vscode/
+.DS_Store
