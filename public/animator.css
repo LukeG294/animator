@@ -1,0 +1,560 @@
+/* All styling for the Animator app. The .gleam files only attach class names. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+
+/* ── Layout: two columns ─────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a2e;
+  color: #d4c5a0;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+/* Left column: the code editor. */
+.code-col {
+  width: var(--code-width, 42%);
+  min-width: 220px;
+  max-width: 70vw;
+  flex-shrink: 0;
+  display: flex;
+  border-right: 1px solid #3a3a5e;
+  background: #0f0f1e;
+}
+
+/* The code column stays in the DOM when collapsed, so CodeMirror keeps its
+   state; hiding it gives the right column the full width. */
+.app.code-hidden .code-col { display: none; }
+
+/* A small emoji button (the code pane's collapse toggle, and the playback
+   controls once they exist). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a4a;
+  color: #d4c5a0;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 8px;
+}
+.icon-btn:hover { background: #3a3a5e; }
+
+/* ── Code panel (left column) ───────────────────────────────────────────── */
+
+.code-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #1a1a3e;
+  border-bottom: 1px solid #3a3a5e;
+}
+.code-title {
+  color: #e8d8b0;
+  font-family: 'Georgia', serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+/* Wrapper holding the editor. */
+.code-editor-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+/* CodeMirror mount node: grows to fill the panel. */
+.code-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: #0d0d1a;
+}
+.code-editor .cm-editor { width: 100%; height: 100%; }
+
+/* Collapsible reference of the built-ins available to draw functions. */
+.reference {
+  margin: 8px 14px 0;
+  border: 1px solid #3a3a5e;
+  border-radius: 4px;
+  background: #0d0d1a;
+  overflow: hidden;
+}
+.reference-summary {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #b8a888;
+  font-family: monospace;
+  font-size: 12px;
+  user-select: none;
+}
+.reference-summary:hover { color: #e8d8b0; }
+.reference-body {
+  padding: 4px 12px 10px;
+  border-top: 1px solid #3a3a5e;
+}
+.reference-group { margin-top: 8px; }
+.reference-group-title {
+  color: #8a8aca;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.reference-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 1px 0;
+}
+.reference-sig {
+  color: #89ddff;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre;
+}
+.reference-desc { color: #6a7a8a; font-size: 11px; }
+
+/* ── Animation area (right column) ──────────────────────────────────────── */
+
+.canvas-area {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a14;
+  container-type: size;
+}
+
+/* The interpreter's List(Path) (or its error), shown as text before the
+   animation pane is built. */
+.output {
+  align-self: stretch;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cfe3ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* Leave room for the reveal button, which only overlays this pane while the
+   code column is hidden. */
+.app.code-hidden .output { padding-top: 48px; }
+
+/* Button that reveals the code column again when it is hidden. */
+.reveal-code {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+/* A centred square that fits the (possibly non-square) animation area. Give your
+   <canvas> this class, so that drawings aren't stretched. */
+.canvas {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+
+
+/* Lightweight error dialog over the animation area. */
+.error-dialog {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(90%, 480px);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 4px solid #ff5370;
+  background: rgba(30, 20, 32, 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  color: #ffd9e0;
+  font-size: 13px;
+  line-height: 1.4;
+  animation: error-in 0.18s ease-out;
+}
+.error-dialog p { margin: 4px 0 0; font-family: ui-monospace, Menlo, monospace; word-break: break-word; }
+.error-close {
+  background: none; border: none; color: inherit; font-size: 18px;
+  line-height: 1; cursor: pointer; opacity: 0.7;
+}
+.error-close:hover { opacity: 1; }
+@keyframes error-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+/* Playback controls along the bottom of the animation area. */
+.controls {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(20, 22, 40, 0.85);
+  color: #cfe3ff;
+  font-size: 12px;
+  width: max-content;
+  max-width: 94%;
+}
+.control-buttons { display: flex; gap: 6px; }
+.ctl-btn {
+  padding: 4px 10px;
+  border: 1px solid #3a4468;
+  border-radius: 6px;
+  background: #1a2040;
+  color: inherit;
+  cursor: pointer;
+}
+.ctl-btn:hover { background: #26305c; }
+.ctl-btn.active { background: #89ddff; color: #0a0a14; border-color: #89ddff; }
+.slider { display: flex; align-items: center; gap: 6px; }
+.slider output { min-width: 3ch; text-align: right; font-family: ui-monospace, Menlo, monospace; }
+
+/* Drawing picker above the code. */
+.library {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 14px;
+  background: #14142c;
+  border-bottom: 1px solid #3a3a5e;
+}
+.library-select {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #4a4a8a;
+  border-radius: 6px;
+  background: #1a2040;
+  color: #e8d8b0;
+  font-size: 13px;
+}
+
+/* Icon-only buttons: playback controls and the trash button. */
+.ctl-btn { display: inline-flex; align-items: center; justify-content: center; padding: 6px 9px; }
+.ctl-btn svg, .icon-btn svg { display: block; }
+.trash:hover { color: #ff8a9b; }
+.trash.armed { background: #ff5370; border-color: #ff5370; color: #fff; }
+.library { gap: 8px; }
+
+.trash { min-width: 32px; height: 28px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+/* ── Game ──────────────────────────────────────────────────────────────── */
+
+/* The page: a bar across the top, then the two columns. */
+.shell { display: flex; flex-direction: column; width: 100vw; height: 100vh; background: #1a1a2e; }
+.shell .app { flex: 1; min-height: 0; height: auto; }
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: #12122a;
+  border-bottom: 1px solid #3a3a5e;
+  color: #e8d8b0;
+}
+.brand { font-family: 'Georgia', serif; font-size: 17px; letter-spacing: 1px; }
+.play-game {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #5b6fd6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.play-game:hover { filter: brightness(1.1); }
+.game-status { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+.game-status .best { color: #89ddff; }
+.exit-game {
+  padding: 6px 14px;
+  border: 1px solid #4a4a8a;
+  border-radius: 999px;
+  background: #1a2040;
+  color: #e8d8b0;
+  cursor: pointer;
+}
+.exit-game:hover { background: #26305c; }
+
+/* The animation canvas with the ball's canvas stacked over it. */
+.stage { position: relative; width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ball-canvas { pointer-events: none; }
+
+/* Toolbox of shapes to drag into the code. */
+.toolbox { padding: 10px 14px; background: #101026; border-bottom: 1px solid #3a3a5e; }
+.toolbox-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.tile {
+  padding: 8px 4px;
+  border: 1px solid #3a3a6a;
+  border-radius: 8px;
+  background: #1a2040;
+  color: #cfe3ff;
+  font-size: 12px;
+  text-align: center;
+  cursor: grab;
+  user-select: none;
+}
+.tile:hover { background: #26305c; border-color: #6a8cff; }
+.tile:active { cursor: grabbing; }
+
+/* The result over the animation. */
+.banner {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 32px;
+  border-radius: 14px;
+  background: rgba(20, 22, 40, 0.92);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  animation: banner-in 0.2s ease-out;
+}
+.banner strong { font-size: 24px; letter-spacing: 0.5px; }
+.banner.cleared strong { color: #5be0a0; }
+.banner.missed strong { color: #ff8a9b; }
+.banner-btn {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #89ddff;
+  color: #06121a;
+  font-weight: 700;
+  cursor: pointer;
+}
+.banner.cleared .banner-btn { background: #5be0a0; }
+.banner-btn:hover { filter: brightness(1.1); }
+@keyframes banner-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+.toolbox-note { margin: 0 0 8px; font-size: 12px; line-height: 1.4; color: #aebbd4; }
+.tile { transition: background 0.1s ease, transform 0.1s ease; }
+.tile:active { transform: scale(0.96); }
+
+/* The button that lets the ball fall. */
+.drop-ball {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 28px;
+  border: none;
+  border-radius: 999px;
+  background: #5b6fd6;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.drop-ball:hover { filter: brightness(1.08); }
+
+.banner-sub { font-size: 13px; color: #aebbd4; text-align: center; white-space: nowrap; }
+
+/* The level and best, in the same type as the app name beside them. */
+.game-status, .exit-game { font-family: 'Georgia', serif; letter-spacing: 1px; }
+.game-status { font-size: 17px; }
+.exit-game { font-size: 14px; }
+
+.play-game:hover, .drop-ball:hover { background: #6c80e4; filter: none; }
+
+/* Shapes in the game can be picked up with the pointer. */
+.stage[data-game="true"] { cursor: grab; touch-action: none; }
+.stage.dragging { cursor: grabbing; }
+
+/* The trash can in the corner of the level. */
+.trash-zone {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 2px dashed #4a4a7a;
+  border-radius: 14px;
+  color: #8a94c4;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.trash-label { max-height: 0; overflow: hidden; font-size: 11px; opacity: 0; transition: all 0.15s ease; white-space: nowrap; }
+.trash-zone.active { border-color: #ff8a9b; color: #ff8a9b; background: rgba(255, 83, 112, 0.08); }
+.trash-zone.active .trash-label { max-height: 16px; opacity: 1; }
+.trash-zone.over { border-style: solid; background: #ff5370; border-color: #ff5370; color: #fff; transform: scale(1.12); }
+
+/* The trash can and the result don't catch the pointer, so shapes under them can
+   still be picked up. */
+.trash-zone { pointer-events: none; }
+.banner { pointer-events: none; }
+.banner-btn { pointer-events: auto; }
+
+/* A tile being dragged over the level. */
+.stage.drop-target { outline: 2px dashed #6a8cff; outline-offset: -2px; }
+
+/* A shape that's already in the level can't be added again. */
+.tile.used { opacity: 0.35; cursor: not-allowed; }
+.tile.used:hover { background: #1a2040; border-color: #3a3a6a; }
+
+/* The third row of tiles changes how the ball moves. */
+.toolbox-grid .tile:nth-child(n + 11) { background: #211b45; border-color: #5a4fa8; }
+.toolbox-grid .tile:nth-child(n + 11):hover { background: #2d2560; border-color: #8b7dff; }
+.toolbox-grid .tile.used:nth-child(n + 11):hover { background: #211b45; border-color: #5a4fa8; }
+
+/* In the game the code column starts narrow, so the level gets the room. It can be
+   dragged wider or narrower by the bar beside it. */
+.app.game .code-col { width: var(--code-width, 330px); }
+.col-resizer {
+  flex: none;
+  width: 8px;
+  margin-left: -4px;
+  cursor: col-resize;
+  position: relative;
+  z-index: 5;
+}
+.col-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+.col-resizer:hover::after, .col-resizer.dragging::after { background: #5b6fd6; }
+.app.code-hidden .col-resizer { display: none; }
+
+/* The level is a square arena, framed so you can see where it ends. */
+.stage {
+  background: #07070f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px #2a2a4a;
+}
+
+/* Clear data, beside Exit. */
+.clear-data {
+  padding: 6px 12px;
+  border: 1px solid #4a4a8a;
+  border-radius: 999px;
+  background: transparent;
+  color: #aeb6d8;
+  font-family: 'Georgia', serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.clear-data:hover { background: #26305c; }
+.clear-data.armed { background: #ff5370; border-color: #ff5370; color: #fff; }
+
+/* The code column never gets so narrow that the toolbox is cut off. */
+.app.game .code-col { min-width: 340px; width: var(--code-width, 340px); }
+.tile { padding: 8px 2px; font-size: 11.5px; overflow: hidden; }
+.toolbox-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+/* The trash can sits inside the level, in its top-right corner. */
+.stage .trash-zone { top: 10px; right: 10px; padding: 7px 10px; z-index: 3; }
+
+/* How to play, shown the first time the game is opened. */
+.intro-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 14, 0.7);
+  animation: intro-fade 0.2s ease-out;
+}
+.intro-dialog {
+  width: min(380px, calc(100vw - 32px));
+  padding: 24px 28px 22px;
+  border: 1px solid #3a3a6a;
+  border-radius: 16px;
+  background: #15152e;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  color: #d4d9f0;
+}
+.intro-dialog h2 {
+  margin-bottom: 14px;
+  font-family: 'Georgia', serif;
+  font-size: 22px;
+  font-weight: normal;
+  letter-spacing: 1px;
+  color: #e8d8b0;
+}
+.intro-dialog ol { margin: 0 0 20px 20px; line-height: 1.55; font-size: 15px; }
+.intro-dialog li { margin-bottom: 8px; padding-left: 4px; }
+.intro-dialog li::marker { color: #89ddff; font-weight: 700; }
+.intro-btn {
+  display: block;
+  margin-left: auto;
+  padding: 9px 26px;
+  border: none;
+  border-radius: 999px;
+  background: #5b6fd6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.intro-btn:hover { background: #6c80e4; }
+@keyframes intro-fade { from { opacity: 0; } }
+
+/* The dialog is set in the same type as the app's name. */
+.intro-dialog, .intro-dialog h2, .intro-btn {
+  font-family: 'Georgia', serif;
+  letter-spacing: 1px;
+}
+.intro-dialog { width: min(440px, calc(100vw - 32px)); }
+.intro-goal {
+  margin-bottom: 14px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: #e8d8b0;
+}
+.intro-dialog ol { font-size: 15px; letter-spacing: 0.5px; line-height: 1.6; }
+.intro-btn { font-size: 15px; font-weight: 600; letter-spacing: 1px; }
